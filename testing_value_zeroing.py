@@ -33,12 +33,11 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 config = AutoConfig.from_pretrained(model_name)
 config.output_hidden_states = True
 model = T5ForConditionalGeneration.from_pretrained(model_name, config=config)
-print(model)
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 model.to(device)
 
-text = "Ieri la Juventus ha vinto contro il napoli in casa 2-0. È la fine per la squadra partenopea?"
+text = "Serata con buttero, carica di miacelona di ""rimasugli"" di vari tabacchi e per rifarmi la bocca un po' di corda.\nFumo"
 inputs = tokenizer(text, return_tensors="pt")
 decoder_input_ids = torch.full_like(inputs['input_ids'], tokenizer.pad_token_id)
 
@@ -92,19 +91,21 @@ for layer in LAYERS:
     b = layer % 4
 
     sns.heatmap(ax=axs[a, b],
-                data=pd.DataFrame(rollout_valuezeroing_scores[layer], index=all_tokens, columns=all_tokens), cmap=cmap,
-                annot=False, cbar=False, xticklabels=True, yticklabels=True)
+                data=pd.DataFrame(rollout_valuezeroing_scores[layer][:-1, :-1], index=all_tokens[0][:-1],
+                                  columns=all_tokens[0][:-1]), cmap=cmap, annot=False, cbar=False, xticklabels=True,
+                yticklabels=True)
     axs[a, b].set_title(f"Layer: {layer + 1}")
 
     # Reduce font size to ensure text fits
     axs[a, b].set_xticklabels(axs[a, b].get_xticklabels(), fontsize=6)
-    axs[a, b].set_yticklabels(axs[a, b].get_yticklabels(), fontsize=6)
+    axs[a, b].set_yticklabels(axs[a, b].get_yticklabels(), rotation=360, fontsize=6)
     axs[a, b].set_xlabel('')
     axs[a, b].set_ylabel('')
 
 # Ensure the layout is tight to further avoid overlaps
 # fig.tight_layout()
 print(all_tokens)
+
 plt.show()
 
 """def preprocess_data(examples):
