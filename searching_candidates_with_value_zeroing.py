@@ -8,6 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from tqdm import tqdm
+import re
+import json
 
 
 def compute_joint_attention(att_mat, res=True):
@@ -139,13 +141,16 @@ if __name__ == "__main__":
         'TECHNOLOGY': 'Tecnologia'
     }
 
-    text = "Glaceon  lv28 ps119 Abilità: Mantelneve  Alitogelido (-60, brutto colpo) Ventogelato (-59, riduce Vel) Morso (-62, può far Tent) Gelodenti (-66, può far Tent o Gel) Exp: 30/100 Morso e exeggcute KO ricerco però stavolta erba livello 35"
+    label_representations_candidates = {}
     for index, row in tqdm(df.iterrows(), total=df.shape[0]):
-        # text = " ".join(row['Sentence'].split(" ")[:200]) + "\n" + og_label_map[row['Topic']]
+        if row['Topic'] not in label_representations_candidates:
+            label_representations_candidates[row['Topic']] = {}
+
+        text = " ".join(row['Sentence'].split(" ")[:200])
         inputs = tokenizer(text, return_tensors="pt", max_length=256,
                            truncation=True)
 
-        test_label_inputs = tokenizer("Anime", return_tensors="pt", max_length=256,
+        test_label_inputs = tokenizer(og_label_map[row['Topic']], return_tensors="pt", max_length=256,
                                       truncation=True)
 
         if (inputs['input_ids'].shape[1] == 256 or
@@ -160,8 +165,6 @@ if __name__ == "__main__":
         concat_inputs['attention_mask'] = torch.ones(concat_inputs['input_ids'].shape)
 
         tokenized_tokens = [tokenizer.convert_ids_to_tokens(t) for t in concat_inputs['input_ids']]
-        print(tokenized_tokens)
-
         _, rollout_scores = compute_sentence_rollout_attention(concat_inputs, model, tokenizer, config)
 
         # Getting only the last layer, and removing the EOS tokens for Viz.
@@ -170,86 +173,92 @@ if __name__ == "__main__":
         print(tokenized_tokens)
 
         label_tokens = [tokenizer.convert_ids_to_tokens(t) for t in test_label_inputs['input_ids']][0][:-1]
-        rollout = pd.DataFrame(rollout_scores, columns=tokenized_tokens[0][:-1], index=tokenized_tokens[0][:-1])
+        rollout = pd.DataFrame(rollout_scores,
+                               columns=[tok + "•" + str(index) for index, tok in enumerate(tokenized_tokens[0][:-1])],
+                               index=tokenized_tokens[0][:-1])
 
         # getting only the part regarding the label tokens.
         rollout = rollout.tail(test_label_inputs['input_ids'].shape[1] - 1)
 
-        print(rollout)
-
         sns.heatmap(data=rollout, cmap='Blues', annot=False, cbar=False, xticklabels=True,
                     yticklabels=True)
 
-        plt.show()
-        # print(df[test_label_inputs['input_ids']])
-        break
+        max_col_per_row = rollout.idxmax(axis=1)
+        max_value_per_row = rollout.max(axis=1)
 
-"""def preprocess_data(examples):   
-    inputs = [text for text in examples["Sentence"] if text != None]
+        result_df = pd.DataFrame({
+            'column': max_col_per_row,
+            'value': max_value_per_row
+        })
 
-    # Setup the tokenizer for targets
-    texts_target = [label_repr[text][0] for text in examples[label_column] if text != None]
-
-    model_inputs = tokenizer(inputs, max_length=max_input_length, padding='max_length',
-                             truncation=True)
-    model_inputs['labels'] = tokenizer(text_target=texts_target, max_length=max_target_length,
-                                       padding='max_length', truncation=True)['input_ids']
-    return model_inputs
+        print(result_df)
 
 
-def compute_metrics(eval_pred):
-    predictions, labels = eval_pred
+        def merge_columns_and_values(start_col_idx, col_names):
+            merged_cols = []
+            merged_values = []
 
-    decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
+            # Traverse forward
+            for idx in range(start_col_idx, len(col_names)):
+                col_name = col_names[idx]
+                if col_name.startswith('▁') and idx != start_col_idx:
+                    break
+                merged_cols.append(col_name)
+                merged_values.append(rollout[col_name])
 
-    decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
+            # Traverse backward
+            for idx in range(start_col_idx - 1, -1, -1):
+                col_name = col_names[idx]
+                if col_name.startswith('▁'):
+                    merged_cols.insert(0, col_name)  # prepend column names
+                    merged_values.insert(0, rollout[col_name])  # prepend values
+                    break
+                merged_cols.insert(0, col_name)  # prepend column names
+                merged_values.insert(0, rollout[col_name])  # prepend values
 
-    # Calculate accuracy and f-score for each class
-    report = classification_report(decoded_preds, decoded_labels, output_dict=True)
+            # Merged value is a matrix label subtoken x candidate subtoken
+            # with the sum(axis=1) we have a vector of label subtoken value zeroing score of
+            # aggregated importance of the whole candidate
+            # for each subtoken of the label. to avoid giving more score to the labels with the most subtoken, we obtain
+            # one scalar by averaging it.
 
-    return {
-        'accuracy': report['accuracy'],
-        'f1_score_macro': report['macro avg']['f1-score'],
-        'f1_score_weighted': report['weighted avg']['f1-score'],
-    }
+            return merged_cols, pd.concat(merged_values, axis=1).sum(axis=1)
 
 
-model_dir = f"models/fine-tuned-model"
+        candidates = []
+        # Check each column in result_df
+        for label_index, result_df_row in result_df.iterrows():
+            col_names = rollout.columns.tolist()
 
-model_args = Seq2SeqTrainingArguments(
-    model_dir,
-    evaluation_strategy="epoch",
-    eval_steps=50000,
-    logging_strategy="epoch",
-    logging_steps=1000,
-    save_strategy="epoch",
-    save_steps=50000,
-    learning_rate=4e-5,
-    per_device_train_batch_size=batch_size,
-    per_device_eval_batch_size=batch_size,
-    weight_decay=0.01,
-    save_total_limit=1,
-    num_train_epochs=epochs,
-    predict_with_generate=True,
-    fp16=False
-)
+            # Ensure that the column name actually exists in `col_names` to avoid a ValueError
+            if result_df_row['column'] in col_names:
+                start_col_idx = col_names.index(result_df_row['column'])
 
-test_df = pd.read_csv(test_df_path)
-test = Dataset.from_pandas(test_df)
-train = Dataset.from_pandas(df)
+                # Get merged column names and values
+                merged_cols, merged_values = merge_columns_and_values(start_col_idx, col_names)
 
-# Tokenize data
-tokenized_train = train.map(preprocess_data,
-                            batched=True)
+                selected_word = ""
+                for subtoken in merged_cols:
+                    subtoken = re.sub(r"•\d+", "", subtoken)
+                    subtoken = re.sub(r"▁+", "", subtoken)
+                    selected_word += subtoken
 
-tokenized_test = test.map(preprocess_data,
-                          batched=True)
+                print(f"For Label subtoken '{label_index}' the selected candidate is '{selected_word}', "
+                      f"with zero value of: {sum(merged_values.tolist()) / len(merged_values.tolist())}")
+                candidates.append((selected_word, sum(merged_values.tolist()) / len(merged_values.tolist())))
 
-train_dataset = tokenized_train.remove_columns(
-    [column for column in tokenized_train.features if column not in ['attention_mask', 'labels', 'input_ids']])
-test_dataset = tokenized_test.remove_columns(
-    [column for column in tokenized_test.features if column not in ['attention_mask', 'labels', 'input_ids']])
+            else:
+                print(f"Column {result_df_row['column']} not found in rollout columns!")
 
-train_dataset = train_dataset.shuffle(seed=42)
-test_dataset = test_dataset.shuffle(seed=42)
-"""
+        # ... Remaining code ...
+
+        # plt.show()
+        print(candidates)
+        elected = max(candidates, key=lambda x: x[1])
+        print(f"The elected word for this sentence is: {elected}")
+        if elected[0] not in label_representations_candidates[row['Topic']]:
+            label_representations_candidates[row['Topic']][elected[0]] = []
+        label_representations_candidates[row['Topic']][elected[0]].append(elected[1])
+
+    with open("candidates.json", "w") as file_output:
+        file_output.write(json.dumps(label_representations_candidates))
