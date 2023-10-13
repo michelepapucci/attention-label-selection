@@ -146,12 +146,11 @@ if __name__ == "__main__":
         if row['Topic'] not in label_representations_candidates:
             label_representations_candidates[row['Topic']] = {}
 
-        # text = " ".join(row['Sentence'].split(" ")[:200])
-        text = "Quando succede questo non bisogna agire d'impulso ma di astuzia; almeno cercare di riacquistarla dopo averla persa da acquisto compulsivo. Ho toppato anche io da poco ma con altro disonesto per altra cosa. La denuncia alla polizia postale è partita in tempo con altre segnalazioni di altre truffe in corso. Se vuole la polizia postale lo può scovare, ma prima che il magistrato faccia mettere sotto controllo il telefonino con i vari spostamenti, fanno prima a fare un altro papa........"
+        text = " ".join(row['Sentence'].split(" ")[:200])
         inputs = tokenizer(text, return_tensors="pt", max_length=256,
                            truncation=True)
 
-        test_label_inputs = tokenizer("Bicicletta", return_tensors="pt", max_length=256,
+        test_label_inputs = tokenizer(og_label_map[row['Topic']], return_tensors="pt", max_length=256,
                                       truncation=True)
 
         if (inputs['input_ids'].shape[1] == 256 or
@@ -267,7 +266,6 @@ if __name__ == "__main__":
         if elected[0] not in label_representations_candidates[row['Topic']]:
             label_representations_candidates[row['Topic']][elected[0]] = []
         label_representations_candidates[row['Topic']][elected[0]].append(elected[1])
-        break
 
     with open("candidates.json", "w") as file_output:
         file_output.write(json.dumps(label_representations_candidates))
