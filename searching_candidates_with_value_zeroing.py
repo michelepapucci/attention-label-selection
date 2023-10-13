@@ -181,8 +181,8 @@ if __name__ == "__main__":
         # getting only the part regarding the label tokens.
         rollout = rollout.tail(test_label_inputs['input_ids'].shape[1] - 1)
 
-        sns.heatmap(data=rollout, cmap='Blues', annot=False, cbar=False, xticklabels=True,
-                    yticklabels=True)
+        """sns.heatmap(data=rollout, cmap='Blues', annot=False, cbar=False, xticklabels=True,
+                    yticklabels=True)"""
 
         max_col_per_row = rollout.idxmax(axis=1)
         max_value_per_row = rollout.max(axis=1)
@@ -256,10 +256,14 @@ if __name__ == "__main__":
 
         # ... Remaining code ...
 
-        plt.show()
+        # plt.show()
+
         print(candidates)
+
         elected = max(candidates, key=lambda x: x[1])
+
         print(f"The elected word for this sentence is: {elected}")
+
         if elected[0] not in label_representations_candidates[row['Topic']]:
             label_representations_candidates[row['Topic']][elected[0]] = []
         label_representations_candidates[row['Topic']][elected[0]].append(elected[1])
