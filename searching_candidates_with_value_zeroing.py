@@ -128,8 +128,9 @@ if __name__ == "__main__":
     df = pd.read_csv("data/training_filtered.csv")
 
     og_label_map = {
-        'ANIME': 'Anime',
+        'TECHNOLOGY': 'Tecnologia',
         'BIKES': 'Bicicletta',
+        'ANIME': 'Anime',
         'SPORTS': 'Sport',
         'AUTO-MOTO': 'Automobilismo',
         'NATURE': 'Natura',
@@ -138,134 +139,152 @@ if __name__ == "__main__":
         'CELEBRITIES': 'Celebrità',
         'SMOKE': 'Fumo',
         'ENTERTAINMENT': 'Intrattenimento',
-        'TECHNOLOGY': 'Tecnologia'
     }
 
     label_representations_candidates = {}
-    for index, row in tqdm(df.iterrows(), total=df.shape[0]):
-        if row['Topic'] not in label_representations_candidates:
-            label_representations_candidates[row['Topic']] = {}
 
-        text = " ".join(row['Sentence'].split(" ")[:200])
-        inputs = tokenizer(text, return_tensors="pt", max_length=256,
-                           truncation=True)
+    for key in og_label_map:
 
-        test_label_inputs = tokenizer(og_label_map[row['Topic']], return_tensors="pt", max_length=256,
-                                      truncation=True)
+        by_topic_df = df[df['Topic'] == key]
 
-        if (inputs['input_ids'].shape[1] == 256 or
-                inputs['input_ids'].shape[1] + test_label_inputs['input_ids'].shape[1] >= 256):
-            inputs['input_ids'] = inputs['input_ids'][:, :(256 - test_label_inputs['input_ids'].shape[1])]
-        else:
-            inputs['input_ids'] = inputs['input_ids'][:, :-1]
+        counter = 0
 
-        concat_inputs = {
-            'input_ids': torch.cat((inputs['input_ids'], test_label_inputs['input_ids']), 1),
-        }
-        concat_inputs['attention_mask'] = torch.ones(concat_inputs['input_ids'].shape)
+        for index, row in tqdm(by_topic_df.iterrows(), total=int(by_topic_df.shape[0] / 10)):
+            if row['Topic'] not in label_representations_candidates:
+                label_representations_candidates[row['Topic']] = {}
 
-        tokenized_tokens = [tokenizer.convert_ids_to_tokens(t) for t in concat_inputs['input_ids']]
-        _, rollout_scores = compute_sentence_rollout_attention(concat_inputs, model, tokenizer, config)
+            text = " ".join(row['Sentence'].split(" ")[:200])
+            inputs = tokenizer(text, return_tensors="pt", max_length=256,
+                               truncation=True)
 
-        # Getting only the last layer, and removing the EOS tokens for Viz.
-        rollout_scores = rollout_scores[-1][:-1, :-1]
+            test_label_inputs = tokenizer(og_label_map[row['Topic']], return_tensors="pt", max_length=256,
+                                          truncation=True)
 
-        print(tokenized_tokens)
+            if (inputs['input_ids'].shape[1] == 256 or
+                    inputs['input_ids'].shape[1] + test_label_inputs['input_ids'].shape[1] >= 256):
+                inputs['input_ids'] = inputs['input_ids'][:, :(256 - test_label_inputs['input_ids'].shape[1])]
+            else:
+                inputs['input_ids'] = inputs['input_ids'][:, :-1]
 
-        label_tokens = [tokenizer.convert_ids_to_tokens(t) for t in test_label_inputs['input_ids']][0][:-1]
-        rollout = pd.DataFrame(rollout_scores,
-                               columns=[tok + "•" + str(index) for index, tok in enumerate(tokenized_tokens[0][:-1])],
-                               index=tokenized_tokens[0][:-1])
+            concat_inputs = {
+                'input_ids': torch.cat((inputs['input_ids'], test_label_inputs['input_ids']), 1),
+            }
+            concat_inputs['attention_mask'] = torch.ones(concat_inputs['input_ids'].shape)
 
-        # getting only the part regarding the label tokens.
-        rollout = rollout.tail(test_label_inputs['input_ids'].shape[1] - 1)
+            tokenized_tokens = [tokenizer.convert_ids_to_tokens(t) for t in concat_inputs['input_ids']]
+            _, rollout_scores = compute_sentence_rollout_attention(concat_inputs, model, tokenizer, config)
 
-        """sns.heatmap(data=rollout, cmap='Blues', annot=False, cbar=False, xticklabels=True,
-                    yticklabels=True)"""
+            # Getting only the last layer, and removing the EOS tokens for Viz.
+            rollout_scores = rollout_scores[-1][:-1, :-1]
 
-        max_col_per_row = rollout.idxmax(axis=1)
-        max_value_per_row = rollout.max(axis=1)
+            print(tokenized_tokens)
 
-        result_df = pd.DataFrame({
-            'column': max_col_per_row,
-            'value': max_value_per_row
-        })
+            label_tokens = [tokenizer.convert_ids_to_tokens(t) for t in test_label_inputs['input_ids']][0][:-1]
+            rollout = pd.DataFrame(rollout_scores,
+                                   columns=[tok + "•" + str(index) for index, tok in
+                                            enumerate(tokenized_tokens[0][:-1])],
+                                   index=tokenized_tokens[0][:-1])
 
-        print(result_df)
+            # getting only the part regarding the label tokens.
+            rollout = rollout.tail(test_label_inputs['input_ids'].shape[1] - 1)
+
+            """sns.heatmap(data=rollout, cmap='Blues', annot=False, cbar=False, xticklabels=True,
+                        yticklabels=True)"""
+
+            max_col_per_row = rollout.idxmax(axis=1)
+            max_value_per_row = rollout.max(axis=1)
+
+            result_df = pd.DataFrame({
+                'column': max_col_per_row,
+                'value': max_value_per_row
+            })
+
+            print(result_df)
+
+            attention_peak = result_df['value'].max()
 
 
-        def merge_columns_and_values(start_col_idx, col_names):
-            merged_cols = []
-            merged_values = []
+            def merge_columns_and_values(start_col_idx, col_names):
+                merged_cols = []
+                merged_values = []
 
-            # Traverse forward
-            for idx in range(start_col_idx, len(col_names)):
-                col_name = col_names[idx]
-                if col_name.startswith('▁') and idx != start_col_idx:
-                    break
-                merged_cols.append(col_name)
-                merged_values.append(rollout[col_name])
+                # Traverse forward
+                for idx in range(start_col_idx, len(col_names)):
+                    col_name = col_names[idx]
+                    if col_name.startswith('▁') and idx != start_col_idx:
+                        break
+                    merged_cols.append(col_name)
+                    merged_values.append(rollout[col_name])
 
-            if col_names[start_col_idx].startswith('▁'):
-                return merged_cols, pd.concat(merged_values, axis=1).sum(axis=1)
-
-            # Traverse backward
-            for idx in range(start_col_idx - 1, -1, -1):
-                col_name = col_names[idx]
-                if col_name.startswith('▁'):
+                if col_names[start_col_idx].startswith('▁'):
+                    return merged_cols, pd.concat(merged_values, axis=1).sum(axis=1)
+                # Traverse backward
+                for idx in range(start_col_idx - 1, -1, -1):
+                    col_name = col_names[idx]
+                    if col_name.startswith('▁'):
+                        merged_cols.insert(0, col_name)  # prepend column names
+                        merged_values.insert(0, rollout[col_name])  # prepend values
+                        break
                     merged_cols.insert(0, col_name)  # prepend column names
                     merged_values.insert(0, rollout[col_name])  # prepend values
-                    break
-                merged_cols.insert(0, col_name)  # prepend column names
-                merged_values.insert(0, rollout[col_name])  # prepend values
 
-            # Merged value is a matrix label subtoken x candidate subtoken
-            # with the sum(axis=1) we have a vector of label subtoken value zeroing score of
-            # aggregated importance of the whole candidate
-            # for each subtoken of the label. to avoid giving more score to the labels with the most subtoken, we obtain
-            # one scalar by averaging it.
+                # Merged value is a matrix label subtoken x candidate subtoken
+                # with the sum(axis=1) we have a vector of label subtoken value zeroing score of
+                # aggregated importance of the whole candidate
+                # for each subtoken of the label. to avoid giving more score to the labels with the most subtoken, we obtain
+                # one scalar by averaging it.
 
-            return merged_cols, pd.concat(merged_values, axis=1).sum(axis=1)
+                return merged_cols, pd.concat(merged_values, axis=1).sum(axis=1)
 
 
-        candidates = []
-        # Check each column in result_df
-        for label_index, result_df_row in result_df.iterrows():
-            col_names = rollout.columns.tolist()
+            candidates = []
+            # Check each column in result_df
+            for label_index, result_df_row in result_df.iterrows():
+                col_names = rollout.columns.tolist()
 
-            # Ensure that the column name actually exists in `col_names` to avoid a ValueError
-            if result_df_row['column'] in col_names:
-                start_col_idx = col_names.index(result_df_row['column'])
+                # Ensure that the column name actually exists in `col_names` to avoid a ValueError
+                if result_df_row['column'] in col_names:
+                    start_col_idx = col_names.index(result_df_row['column'])
 
-                # Get merged column names and values
-                merged_cols, merged_values = merge_columns_and_values(start_col_idx, col_names)
+                    # Get merged column names and values
+                    merged_cols, merged_values = merge_columns_and_values(start_col_idx, col_names)
 
-                selected_word = ""
-                for subtoken in merged_cols:
-                    subtoken = re.sub(r"•\d+", "", subtoken)
-                    subtoken = re.sub(r"▁+", "", subtoken)
-                    selected_word += subtoken
+                    selected_word = ""
+                    for subtoken in merged_cols:
+                        subtoken = re.sub(r"•\d+", "", subtoken)
+                        subtoken = re.sub(r"▁+", "", subtoken)
+                        selected_word += subtoken
 
-                print(f"For Label subtoken '{label_index}' the selected candidate is '{selected_word}', "
-                      f"with zero value of: {sum(merged_values.tolist()) / len(merged_values.tolist())}")
-                candidates.append((selected_word, sum(merged_values.tolist()) / len(merged_values.tolist())))
+                    print(f"For Label subtoken '{label_index}' the selected candidate is '{selected_word}', "
+                          f"with zero value of: {sum(merged_values.tolist()) / len(merged_values.tolist())}")
 
-            else:
-                print(f"Column {result_df_row['column']} not found in rollout columns!")
+                    # The candidates are (word, average word(merged subtoken) attention for each label subtoken,
+                    # maximum attention value found in the word subtoken)
+                    candidates.append((selected_word,
+                                       sum(merged_values.tolist()) / len(merged_values.tolist()),
+                                       attention_peak))
 
-        # ... Remaining code ...
+                else:
+                    print(f"Column {result_df_row['column']} not found in rollout columns!")
 
-        # plt.show()
+            # ... Remaining code ...
 
-        print(candidates)
+            # plt.show()
 
-        elected = max(candidates, key=lambda x: x[1])
+            print(candidates)
 
-        print(f"The elected word for this sentence is: {elected}")
+            elected = max(candidates, key=lambda x: x[1])
 
-        if elected[0] not in label_representations_candidates[row['Topic']]:
-            label_representations_candidates[row['Topic']][elected[0]] = []
-        label_representations_candidates[row['Topic']][elected[0]].append(elected[1])
+            print(f"The elected word for this sentence is: {elected}")
 
+            if elected[0] not in label_representations_candidates[row['Topic']]:
+                label_representations_candidates[row['Topic']][elected[0]] = []
+            label_representations_candidates[row['Topic']][elected[0]].append((elected[1], elected[2]))
+
+            counter += 1
+
+            if counter >= by_topic_df.shape[0] / 10:
+                break
+        
     with open("candidates.json", "w") as file_output:
         file_output.write(json.dumps(label_representations_candidates))
