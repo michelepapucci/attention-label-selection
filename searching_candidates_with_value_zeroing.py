@@ -150,7 +150,7 @@ if __name__ == "__main__":
 
         counter = 0
 
-        for index, row in tqdm(by_topic_df.iterrows(), total=int(by_topic_df.shape[0] / 10)):
+        for index, row in tqdm(by_topic_df.iterrows(), total=int(by_topic_df.shape[0])):
             if row['Topic'] not in label_representations_candidates:
                 label_representations_candidates[row['Topic']] = {}
 
@@ -284,8 +284,8 @@ if __name__ == "__main__":
 
             counter += 1
 
-            if counter >= by_topic_df.shape[0] / 10:
-                break
+            """if counter >= by_topic_df.shape[0] / 10:
+                break"""
         
     with open("candidates.json", "w") as file_output:
         file_output.write(json.dumps(label_representations_candidates))
