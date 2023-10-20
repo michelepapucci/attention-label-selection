@@ -426,7 +426,8 @@ class T5Attention(nn.Module):
             attn_weights = attn_weights * layer_head_mask
 
         if zero_value_index is not None:  # zeroing value vectors corresponding to the given token index
-            value_states[:, :, zero_value_index] = torch.zeros(value_states[:, :, zero_value_index].size())
+            value_states[:, :, zero_value_index] = torch.zeros(value_states[:, :, zero_value_index].size(),
+                                                               device=scores.device)
         ##
 
         attn_output = unshape(torch.matmul(attn_weights, value_states))  # (batch_size, seq_length, dim)

@@ -128,10 +128,10 @@ if __name__ == "__main__":
     df = pd.read_csv("data/training_filtered.csv")
 
     og_label_map = {
+        'SPORTS': 'Sport',
         'TECHNOLOGY': 'Tecnologia',
         'BIKES': 'Bicicletta',
         'ANIME': 'Anime',
-        'SPORTS': 'Sport',
         'AUTO-MOTO': 'Automobilismo',
         'NATURE': 'Natura',
         'METAL-DETECTING': 'Metal Detector',
