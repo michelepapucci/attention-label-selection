@@ -29,9 +29,10 @@ def compute_joint_attention(att_mat, res=True):
 
 def compute_sentence_rollout_attention(inputs, model, tokenizer, config, plot=False, layers=None):
     decoder_input_ids = torch.full_like(inputs['input_ids'],
-                                        tokenizer.pad_token_id)  # Since we are not generating it's a pad token tensor
+                                        tokenizer.pad_token_id, device=device)  # Since we are not generating it's a pad token tensor
 
     inputs = {k: v.to(device) for k, v in inputs.items()}
+
     with torch.no_grad():
         outputs = model(inputs['input_ids'],
                         attention_mask=inputs['attention_mask'],
