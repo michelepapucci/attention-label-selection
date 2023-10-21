@@ -29,7 +29,8 @@ def compute_joint_attention(att_mat, res=True):
 
 def compute_sentence_rollout_attention(inputs, model, tokenizer, config, plot=False, layers=None):
     decoder_input_ids = torch.full_like(inputs['input_ids'],
-                                        tokenizer.pad_token_id, device=device)  # Since we are not generating it's a pad token tensor
+                                        tokenizer.pad_token_id,
+                                        device=device)  # Since we are not generating it's a pad token tensor
 
     inputs = {k: v.to(device) for k, v in inputs.items()}
 
@@ -129,9 +130,9 @@ if __name__ == "__main__":
     df = pd.read_csv("data/training_filtered.csv")
 
     og_label_map = {
+        'BIKES': 'Bicicletta',
         'SPORTS': 'Sport',
         'TECHNOLOGY': 'Tecnologia',
-        'BIKES': 'Bicicletta',
         'ANIME': 'Anime',
         'AUTO-MOTO': 'Automobilismo',
         'NATURE': 'Natura',
@@ -158,7 +159,8 @@ if __name__ == "__main__":
             inputs = tokenizer(text, return_tensors="pt", max_length=256,
                                truncation=True)
 
-            test_label_inputs = tokenizer(og_label_map[row['Topic']], return_tensors="pt", max_length=256,
+            # Versione dove si appende la label.
+            """test_label_inputs = tokenizer(og_label_map[row['Topic']], return_tensors="pt", max_length=256,
                                           truncation=True)
 
             if (inputs['input_ids'].shape[1] == 256 or
@@ -173,24 +175,36 @@ if __name__ == "__main__":
             concat_inputs['attention_mask'] = torch.ones(concat_inputs['input_ids'].shape)
 
             tokenized_tokens = [tokenizer.convert_ids_to_tokens(t) for t in concat_inputs['input_ids']]
-            _, rollout_scores = compute_sentence_rollout_attention(concat_inputs, model, tokenizer, config)
+            _, rollout_scores = compute_sentence_rollout_attention(concat_inputs, model, tokenizer, config)"""
+
+            tokenized_tokens = [tokenizer.convert_ids_to_tokens(t) for t in inputs['input_ids']]
+            _, rollout_scores = compute_sentence_rollout_attention(inputs, model, tokenizer, config)
 
             # Getting only the last layer, and removing the EOS tokens for Viz.
-            rollout_scores = rollout_scores[-1][:-1, :-1]
+            """rollout_scores = rollout_scores[-1][:-1, :-1]"""
+            rollout_scores = rollout_scores[-1][:, :-1]
 
             print(tokenized_tokens)
 
-            label_tokens = [tokenizer.convert_ids_to_tokens(t) for t in test_label_inputs['input_ids']][0][:-1]
+            """label_tokens = [tokenizer.convert_ids_to_tokens(t) for t in test_label_inputs['input_ids']][0][:-1]"""
+
+            """rollout = pd.DataFrame(rollout_scores,
+                                   columns=[tok + "•" + str(index) for index, tok in
+                                            enumerate(tokenized_tokens[0][:-1])],
+                                   index=tokenized_tokens[0][:-1])"""
+
             rollout = pd.DataFrame(rollout_scores,
                                    columns=[tok + "•" + str(index) for index, tok in
                                             enumerate(tokenized_tokens[0][:-1])],
-                                   index=tokenized_tokens[0][:-1])
+                                   index=tokenized_tokens[0])
+
 
             # getting only the part regarding the label tokens.
-            rollout = rollout.tail(test_label_inputs['input_ids'].shape[1] - 1)
+            """rollout = rollout.tail(test_label_inputs['input_ids'].shape[1] - 1)"""
+            rollout = rollout.tail(1)
 
-            """sns.heatmap(data=rollout, cmap='Blues', annot=False, cbar=False, xticklabels=True,
-                        yticklabels=True)"""
+            sns.heatmap(data=rollout, cmap='Blues', annot=False, cbar=False, xticklabels=True, yticklabels=True)
+            plt.show()
 
             max_col_per_row = rollout.idxmax(axis=1)
             max_value_per_row = rollout.max(axis=1)
@@ -270,8 +284,6 @@ if __name__ == "__main__":
 
             # ... Remaining code ...
 
-            # plt.show()
-
             print(candidates)
 
             elected = max(candidates, key=lambda x: x[1])
@@ -286,6 +298,6 @@ if __name__ == "__main__":
 
             """if counter >= by_topic_df.shape[0] / 10:
                 break"""
-        
+
     with open("candidates.json", "w") as file_output:
         file_output.write(json.dumps(label_representations_candidates))
