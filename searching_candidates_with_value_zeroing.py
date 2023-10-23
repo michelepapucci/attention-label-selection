@@ -159,8 +159,9 @@ if __name__ == "__main__":
             inputs = tokenizer(text, return_tensors="pt", max_length=256,
                                truncation=True)
 
+            prompt = " La frase precedente appartiene alla categoria "
             # Versione dove si appende la label.
-            """test_label_inputs = tokenizer(og_label_map[row['Topic']], return_tensors="pt", max_length=256,
+            test_label_inputs = tokenizer(prompt + og_label_map[row['Topic']], return_tensors="pt", max_length=256,
                                           truncation=True)
 
             if (inputs['input_ids'].shape[1] == 256 or
@@ -175,36 +176,36 @@ if __name__ == "__main__":
             concat_inputs['attention_mask'] = torch.ones(concat_inputs['input_ids'].shape)
 
             tokenized_tokens = [tokenizer.convert_ids_to_tokens(t) for t in concat_inputs['input_ids']]
-            _, rollout_scores = compute_sentence_rollout_attention(concat_inputs, model, tokenizer, config)"""
+            _, rollout_scores = compute_sentence_rollout_attention(concat_inputs, model, tokenizer, config)
 
-            tokenized_tokens = [tokenizer.convert_ids_to_tokens(t) for t in inputs['input_ids']]
-            _, rollout_scores = compute_sentence_rollout_attention(inputs, model, tokenizer, config)
+            """tokenized_tokens = [tokenizer.convert_ids_to_tokens(t) for t in inputs['input_ids']]
+            _, rollout_scores = compute_sentence_rollout_attention(inputs, model, tokenizer, config)"""
 
             # Getting only the last layer, and removing the EOS tokens for Viz.
-            """rollout_scores = rollout_scores[-1][:-1, :-1]"""
-            rollout_scores = rollout_scores[-1][:, :-1]
+            rollout_scores = rollout_scores[-1][:-1, :-1]
+            """rollout_scores = rollout_scores[-1][:, :-1]"""
 
             print(tokenized_tokens)
 
-            """label_tokens = [tokenizer.convert_ids_to_tokens(t) for t in test_label_inputs['input_ids']][0][:-1]"""
-
-            """rollout = pd.DataFrame(rollout_scores,
-                                   columns=[tok + "•" + str(index) for index, tok in
-                                            enumerate(tokenized_tokens[0][:-1])],
-                                   index=tokenized_tokens[0][:-1])"""
+            label_tokens = [tokenizer.convert_ids_to_tokens(t) for t in test_label_inputs['input_ids']][0][:-1]
 
             rollout = pd.DataFrame(rollout_scores,
                                    columns=[tok + "•" + str(index) for index, tok in
                                             enumerate(tokenized_tokens[0][:-1])],
-                                   index=tokenized_tokens[0])
+                                   index=tokenized_tokens[0][:-1])
+
+            """rollout = pd.DataFrame(rollout_scores,
+                                   columns=[tok + "•" + str(index) for index, tok in
+                                            enumerate(tokenized_tokens[0][:-1])],
+                                   index=tokenized_tokens[0])"""
 
 
             # getting only the part regarding the label tokens.
-            """rollout = rollout.tail(test_label_inputs['input_ids'].shape[1] - 1)"""
-            rollout = rollout.tail(1)
+            rollout = rollout.tail(test_label_inputs['input_ids'].shape[1] - 1)
+            """rollout = rollout.tail(1)"""
 
-            sns.heatmap(data=rollout, cmap='Blues', annot=False, cbar=False, xticklabels=True, yticklabels=True)
-            plt.show()
+            # sns.heatmap(data=rollout, cmap='Blues', annot=False, cbar=False, xticklabels=True, yticklabels=True)
+            # plt.show()
 
             max_col_per_row = rollout.idxmax(axis=1)
             max_value_per_row = rollout.max(axis=1)
