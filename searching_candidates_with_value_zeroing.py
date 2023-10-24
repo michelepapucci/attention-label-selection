@@ -129,7 +129,7 @@ if __name__ == "__main__":
 
     df = pd.read_csv("data/training_filtered.csv")
 
-    og_label_map = {
+    """og_label_map = {
         'BIKES': 'Bicicletta',
         'SPORTS': 'Sport',
         'TECHNOLOGY': 'Tecnologia',
@@ -141,6 +141,11 @@ if __name__ == "__main__":
         'CELEBRITIES': 'Celebrità',
         'SMOKE': 'Fumo',
         'ENTERTAINMENT': 'Intrattenimento',
+    }"""
+    og_label_map = {
+        'SPORTS': 'Celebrità',
+        'ANIME': 'Tecnologia',
+        'ENTERTAINMENT': 'Sport',
     }
 
     label_representations_candidates = {}
@@ -159,9 +164,9 @@ if __name__ == "__main__":
             inputs = tokenizer(text, return_tensors="pt", max_length=256,
                                truncation=True)
 
-            prompt = " La frase precedente appartiene alla categoria "
+            # prompt = " La frase precedente appartiene alla categoria "
             # Versione dove si appende la label.
-            test_label_inputs = tokenizer(prompt + og_label_map[row['Topic']], return_tensors="pt", max_length=256,
+            test_label_inputs = tokenizer(og_label_map[row['Topic']], return_tensors="pt", max_length=256,
                                           truncation=True)
 
             if (inputs['input_ids'].shape[1] == 256 or
