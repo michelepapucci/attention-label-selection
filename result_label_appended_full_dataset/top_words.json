@@ -1,1 +1,134 @@
-{"SPORTS": ["campionato", "pareggio", "gol", "centrocampo", "milan", "juventus", "atalanta", "portiere", "sport", "tifosi"], "TECHNOLOGY": ["l'opzione", "funzionante", "nico!", "bravissimo", "semplicissimo!", "discussione", "pensate", "dany", "sparito!", "cliccabile"], "BIKES": ["bicicletta", "sopravvenuti", "gelato", "ebay:", "sergio,", "complimentimenti", "tanti", "tantissimo...", "attender\u00f2", "giustificabile,"], "ANIME": ["manga", "pok\u00e9mon", "streaming/download.", "pokemon", "pok\u00e8mon", "ahahah", "graffio", "..cmq", "codadrago", "drago"], "AUTO-MOTO": ["automobilismo", "concessionaria", "centralina", "sedili", "optional", "concessionario", "serbatoio", "sensore", "foto", "sedile"], "NATURE": ["christopher", "adopero", "documento", "proteggerli", "pregressi...", "gambe", "portamento", "email.", "aggiorno!!", "polletto"], "METAL-DETECTING": ["detector", "prenoto,", "bottone", "guerra", "discriminazione", "spiagge", "principianti", "ritrovamenti", "beppe,", "assomigliamo?"], "MEDICINE-AESTHETICS": ["emozionante!", "sparito,", "delicati", "menzionate", "parlarne", "metterei", "spiegarti", "capirlo", "finasteride", "derma"], "CELEBRITIES": ["celebrit\u00e0", "alessia", "mariana", "kevin", "francesca", "alessia,", "federica", "francesca,", "scandaloso", "nomination"], "SMOKE": ["sigaro", "tabacchi", "pipa", "peterson", "shell", "lane", "congratulazioni", "perfectos", "mcclelland", "fumato"], "ENTERTAINMENT": ["domando,", "cattedrale", "stagione", "concentrare", "riciclati", "parecchio!", "sagra", "difende,", "curiosissimo!!!", "vinile?"]}
+{
+  "SPORTS": [
+    "campionato",
+    "pareggio",
+    "gol",
+    "centrocampo",
+    "milan",
+    "juventus",
+    "atalanta",
+    "portiere",
+    "sport",
+    "tifosi"
+  ],
+  "TECHNOLOGY": [
+    "l'opzione",
+    "funzionante",
+    "nico!",
+    "bravissimo",
+    "semplicissimo!",
+    "discussione",
+    "pensate",
+    "dany",
+    "sparito!",
+    "cliccabile"
+  ],
+  "BIKES": [
+    "bicicletta",
+    "sopravvenuti",
+    "gelato",
+    "ebay:",
+    "sergio,",
+    "complimentimenti",
+    "tanti",
+    "tantissimo...",
+    "attender\u00f2",
+    "giustificabile,"
+  ],
+  "ANIME": [
+    "manga",
+    "pok\u00e9mon",
+    "streaming/download.",
+    "pokemon",
+    "pok\u00e8mon",
+    "ahahah",
+    "graffio",
+    "..cmq",
+    "codadrago",
+    "drago"
+  ],
+  "AUTO-MOTO": [
+    "automobilismo",
+    "concessionaria",
+    "centralina",
+    "sedili",
+    "optional",
+    "concessionario",
+    "serbatoio",
+    "sensore",
+    "foto",
+    "sedile"
+  ],
+  "NATURE": [
+    "christopher",
+    "adopero",
+    "documento",
+    "proteggerli",
+    "pregressi...",
+    "gambe",
+    "portamento",
+    "email.",
+    "aggiorno!!",
+    "polletto"
+  ],
+  "METAL-DETECTING": [
+    "detector",
+    "prenoto,",
+    "bottone",
+    "guerra",
+    "discriminazione",
+    "spiagge",
+    "principianti",
+    "ritrovamenti",
+    "beppe,",
+    "assomigliamo?"
+  ],
+  "MEDICINE-AESTHETICS": [
+    "emozionante!",
+    "sparito,",
+    "delicati",
+    "menzionate",
+    "parlarne",
+    "metterei",
+    "spiegarti",
+    "capirlo",
+    "finasteride",
+    "derma"
+  ],
+  "CELEBRITIES": [
+    "celebrit\u00e0",
+    "alessia",
+    "mariana",
+    "kevin",
+    "francesca",
+    "alessia,",
+    "federica",
+    "francesca,",
+    "scandaloso",
+    "nomination"
+  ],
+  "SMOKE": [
+    "sigaro",
+    "tabacchi",
+    "pipa",
+    "peterson",
+    "shell",
+    "lane",
+    "congratulazioni",
+    "perfectos",
+    "mcclelland",
+    "fumato"
+  ],
+  "ENTERTAINMENT": [
+    "domando,",
+    "cattedrale",
+    "stagione",
+    "concentrare",
+    "riciclati",
+    "parecchio!",
+    "sagra",
+    "difende,",
+    "curiosissimo!!!",
+    "vinile?"
+  ]
+}
