@@ -113,10 +113,10 @@ def fine_tuning(model_name, file_path, representation_rank_file, test_df_path, r
         test_labels = predictions_to_save.label_ids
         decoded_test_preds = tokenizer.batch_decode(test_pred, skip_special_tokens=True)
         decoded_test_labels = tokenizer.batch_decode(test_labels, skip_special_tokens=True)
-
         with open(f"prediction_rank_{'minus_' + str(abs(rank)) if rank < 0 else rank}.tsv", "w") as output_file:
             output_file.write("y_true\ty_pred\n")
             for pred, ground_truth in zip(decoded_test_preds, decoded_test_labels):
+                print(ground_truth, pred)
                 output_file.write(f"{ground_truth}\t{pred}\n")
 
 
