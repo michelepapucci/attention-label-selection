@@ -63,15 +63,13 @@ def fine_tuning(model_name, file_path, representation_rank_file, test_df_path, r
             eval_steps=50000,
             logging_strategy="epoch",
             logging_steps=1000,
-            save_strategy="epoch",
-            save_steps=50000,
             learning_rate=4e-5,
             per_device_train_batch_size=batch_size,
             per_device_eval_batch_size=batch_size,
             weight_decay=0.01,
-            save_total_limit=1,
             num_train_epochs=epochs,
             predict_with_generate=True,
+            save_strategy="no",
             fp16=False
         )
 
@@ -106,6 +104,7 @@ def fine_tuning(model_name, file_path, representation_rank_file, test_df_path, r
             tokenizer=tokenizer,
             compute_metrics=compute_metrics
         )
+        trainer.model.save_pretrained(f"prediction_rank_{rank}")
 
         trainer.train()
         # trainer.save_model(f"models/rank_{'minus_' + str(abs(rank)) if rank < 0 else rank}/fine-tuned-model")
