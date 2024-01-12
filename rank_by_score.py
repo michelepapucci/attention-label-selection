@@ -12,7 +12,7 @@ if __name__ == "__main__":
     for index in range(10):
         index_text = f"_{index}"
         predictions = pd.read_csv(
-            f"results_on_eos_full_dataset/t5_predictions/prediction_rank{index_text}.tsv",
+            f"result_prompt_label_appended_full_dataset/t5_predictions/prediction_rank{index_text}.tsv",
             sep="\t")
 
         report = classification_report(predictions['y_true'], predictions['y_pred'], output_dict=True)

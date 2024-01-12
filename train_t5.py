@@ -181,6 +181,6 @@ if __name__ == "__main__":
     fine_tuning(model_name=args.model_name, file_path=args.file_path,
                 representation_rank_file=args.representation_rank_file,
                 test_df_path="data/test_1_filtered.csv",
-                ranks_to_finetune=range(10),
+                ranks_to_finetune=range(23),
                 label_column=args.label_column, batch_size=int(args.batch_size), epochs=int(args.epochs),
                 debug=args.debug)

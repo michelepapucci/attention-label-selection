@@ -11,7 +11,9 @@ def extract_top_low_level_words(json_path, save_path):
         result = {}
         for high_level, low_level_items in data.items():
             # Limiting to the top 10 low-level words
-            low_level_words = list(low_level_items.keys())[:10]
+            print(high_level)
+            low_level_words = list(low_level_items.keys())[:100]
+            print(len(low_level_words))
             result[high_level] = low_level_words
         return result
 
@@ -23,4 +25,4 @@ def extract_top_low_level_words(json_path, save_path):
 
 if __name__ == "__main__":
     folder = "results_on_eos_full_dataset"
-    extract_top_low_level_words(folder + "/sorted_cleaned_data.json", folder + "/top_words.json")
+    extract_top_low_level_words(folder + "/sorted_cleaned_data.json", folder + "/top_words_100.json")
