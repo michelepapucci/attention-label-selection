@@ -9,10 +9,10 @@ if __name__ == "__main__":
     ranks = []
     fscores = []
 
-    for index in range(10):
+    for index in range(23):
         index_text = f"_{index}"
         predictions = pd.read_csv(
-            f"result_prompt_label_appended_full_dataset/t5_predictions/prediction_rank{index_text}.tsv",
+            f"results_on_eos_full_dataset/t5_predictions_23/prediction_rank{index_text}.tsv",
             sep="\t")
 
         report = classification_report(predictions['y_true'], predictions['y_pred'], output_dict=True)
