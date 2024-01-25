@@ -9,10 +9,10 @@ if __name__ == "__main__":
     ranks = []
     fscores = []
 
-    for index in range(23):
+    for index in range(100):
         index_text = f"_{index}"
         predictions = pd.read_csv(
-            f"results_on_eos_full_dataset/t5_predictions_23/prediction_rank{index_text}.tsv",
+            f"results_on_eos_full_dataset/t5_prediction_no_tech_100/prediction_rank{index_text}.tsv",
             sep="\t")
 
         report = classification_report(predictions['y_true'], predictions['y_pred'], output_dict=True)
@@ -34,8 +34,22 @@ if __name__ == "__main__":
     print(results.summary())
     print(spearmanr(df['ranks'], df['score']))
     plt.savefig("rank_by_score_regression_line.svg", format="svg")  # Save the plot as an SVG file
-    with open(f"plots/rank_by_score_report.txt", "w") as output_file:
+    with open(f"rank_by_score_report.txt", "w") as output_file:
         output_file.write(str(results.summary()))
         output_file.write("\n\nSpearman\n\n")
         output_file.write(str(spearmanr(df['ranks'], df['score'])))
     plt.show()
+    maxrank = 0
+    maxscore = 0
+    minrank = 101
+    minscore = 1000
+    for rank, score in zip(ranks, fscores):
+        if score > maxscore:
+            maxscore = score
+            maxrank = rank
+        if score < minscore:
+            minscore = score
+            minrank = rank
+        print(f"{rank}: {score}\n")
+    print(f"Max rank: {maxrank}, score: {maxscore}\n")
+    print(f"Min rank: {minrank}, score: {minscore}")
