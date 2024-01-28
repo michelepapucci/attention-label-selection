@@ -24,7 +24,7 @@ if __name__ == "__main__":
         sorted_data[topic] = sorted_keywords
 
     # Save the sorted data back to JSON if necessary
-    with open("sorted_cleaned_data.json", "w") as file:
-        json.dump(sorted_data, file, indent=4)
+    """with open("sorted_cleaned_data.json", "w") as file:
+        json.dump(sorted_data, file, indent=4)"""
 
     print("Data has been sorted and saved to 'sorted_data.json'")

@@ -1,3 +1,5 @@
+import json
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -5,19 +7,50 @@ import statsmodels.api as sm
 from sklearn.metrics import classification_report
 from scipy.stats import spearmanr
 
+
+def extract_rank_x_repr(rank, ranked_label):
+    return {key: (ranked_label[key][rank]) for key in ranked_label}
+
+
 if __name__ == "__main__":
     ranks = []
     fscores = []
 
-    for index in range(100):
+    folder = "results_on_eos_full_dataset"
+
+    representations = f"{folder}/top_words_100.json"
+    with open(representations) as input_file:
+        rankings = json.loads(input_file.read())
+
+    total_results = {}
+
+    for index in range(23):
+        total_results[index] = {
+            "weighted_f1-score": 0,
+            "label_score": {}
+        }
         index_text = f"_{index}"
         predictions = pd.read_csv(
-            f"results_on_eos_full_dataset/t5_prediction_no_tech_100/prediction_rank{index_text}.tsv",
+            f"{folder}/t5_predictions_23/prediction_rank{index_text}.tsv",
             sep="\t")
-
+        repr = extract_rank_x_repr(index, rankings)
         report = classification_report(predictions['y_true'], predictions['y_pred'], output_dict=True)
         ranks.append(index)
         fscores.append(report['weighted avg']['f1-score'])
+        for label in rankings:
+            try:
+                total_results[index]["weighted_f1-score"] = report['weighted avg']["f1-score"]
+                total_results[index]["label_score"][label] = report[repr[label]]["f1-score"]
+            except Exception as e:
+                print(index)
+                print(e)
+                print(label)
+                print(repr[label])
+                print(report)
+
+    with open("total_results.json", "w") as output:
+        output.write(json.dumps(total_results))
+
     df = pd.DataFrame({"ranks": ranks, 'score': fscores})
     sns.scatterplot(data=df, x='ranks', y='score')  # changed this line
     plt.title(f"Ranks x f-score")
