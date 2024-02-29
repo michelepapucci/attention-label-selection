@@ -53,18 +53,16 @@ def compute_sentence_rollout_attention(inputs, model, tokenizer, config, plot=Fa
             if layer_index in layers:
                 for t in range(seq_length):
                     pbar.update(1)
-                    extended_blanking_attention_mask: torch.Tensor = model.get_extended_attention_mask(
-                        inputs['attention_mask'], input_shape)
+                    extended_blanking_attention_mask: torch.Tensor = model.get_extended_attention_mask(inputs['attention_mask'], input_shape)
                     with torch.no_grad():
-                        layer_outputs = layer_module(org_hidden_states[layer_index].unsqueeze(0),
-                                                     # previous layer's original output
+                        layer_outputs = layer_module(org_hidden_states[layer_index].unsqueeze(0), # previous layer's original output
                                                      attention_mask=extended_blanking_attention_mask,
                                                      output_attentions=False,
                                                      zero_value_index=t,
                                                      )
                     hidden_states = layer_outputs[0].squeeze().detach().cpu().numpy()
+
                     # compute similarity between original and new outputs
-                    # cosine
                     x = hidden_states
                     y = org_hidden_states[layer_index + 1].detach().cpu().numpy()
 
