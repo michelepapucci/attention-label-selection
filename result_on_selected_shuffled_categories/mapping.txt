@@ -1,3 +1,0 @@
-'SPORTS': 'Celebrità',
-'ANIME': 'Tecnologia',
-'ENTERTAINMENT': 'Sport',
